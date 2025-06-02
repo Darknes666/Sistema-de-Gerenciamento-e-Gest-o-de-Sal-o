@@ -1,0 +1,19 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-main);
+    font-size: bolder;
+}
+main{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.area-util{
+    background-color: bisque;
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
