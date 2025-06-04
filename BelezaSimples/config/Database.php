@@ -1,24 +1,19 @@
 <?php
-class Database {
-    private $host = "localhost";
-    private $db_name = "salao";
-    private $username = "root";
-    private $password = "";
-    public $conn;
 
-    public function getConnection() {
-        $this->conn = null;
-        try {
-            $this->conn = new PDO(
-                "mysql:host=" . $this->host . ";dbname=" . $this->db_name,
-                $this->username,
-                $this->password
-            );
-            $this->conn->exec("set names utf8");
-        } catch (PDOException $exception) {
-            echo "Erro na conexão: " . $exception->getMessage();
-        }
-        return $this->conn;
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_NAME', 'db_salao_gestao');
+
+function getDbConnection() {
+    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+
+    if ($conn->connect_error) {
+        die("ERRO: Não foi possível conectar ao banco de dados. " . $conn->connect_error);
     }
+
+    $conn->set_charset("utf8");
+
+    return $conn;
 }
 ?>

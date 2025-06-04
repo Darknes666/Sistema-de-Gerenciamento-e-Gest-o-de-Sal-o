@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../../config/Database.php';
+require_once __DIR__ . '/../../config/Database.php';
 
 class Agendamento {
     private $conn;
@@ -10,50 +10,26 @@ class Agendamento {
         $this->conn = $database->getConnection();
     }
 
-    public function buscarPorId($id) {
-        $query = "SELECT a.*, 
-                         c.nome AS cliente_nome, 
-                         p.nome AS profissional_nome, 
-                         s.nome AS servico_nome 
-                  FROM " . $this->table_name . " a
-                  JOIN clientes c ON a.cliente_id = c.id
-                  JOIN profissionais p ON a.profissional_id = p.id
-                  JOIN servicos s ON a.servico_id = s.id
-                  WHERE a.id = ? LIMIT 0,1";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-
     public function listar() {
         $query = "SELECT a.*, 
-                         c.nome AS cliente_nome, 
-                         p.nome AS profissional_nome, 
-                         s.nome AS servico_nome 
+                        c.nome AS cliente_nome, 
+                        p.nome AS profissional_nome, 
+                        s.nome AS servico_nome 
                   FROM " . $this->table_name . " a
                   JOIN clientes c ON a.cliente_id = c.id
                   JOIN profissionais p ON a.profissional_id = p.id
                   JOIN servicos s ON a.servico_id = s.id
-                  ORDER BY a.data DESC, a.horario ASC";
+                  ORDER BY a.data, a.horario";
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt;
     }
 
-    public function verificarConflito($profissional_id, $data, $horario, $exclude_id = null) {
+    public function verificarConflito($profissional_id, $data, $horario) {
         $query = "SELECT * FROM " . $this->table_name . " 
                   WHERE profissional_id = ? AND data = ? AND horario = ? AND status = 'agendado'";
-        
-        if ($exclude_id) {
-            $query .= " AND id != ?";
-        }
-        
         $stmt = $this->conn->prepare($query);
-        $params = [$profissional_id, $data, $horario];
-        if ($exclude_id) {
-            $params[] = $exclude_id;
-        }
-        $stmt->execute($params);
+        $stmt->execute([$profissional_id, $data, $horario]);
         return $stmt->rowCount() > 0;
     }
 
@@ -63,14 +39,15 @@ class Agendamento {
         }
 
         $query = "INSERT INTO " . $this->table_name . " 
-                  (cliente_id, profissional_id, servico_id, data, horario, observacoes, status) 
-                  VALUES (?, ?, ?, ?, ?, ?, 'agendado')";
+                  (cliente_id, profissional_id, servico_id, data, horario, observacoes) 
+                  VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([$cliente_id, $profissional_id, $servico_id, $data, $horario, $observacoes]);
     }
 
+    // Editar agendamento
     public function editar($id, $cliente_id, $profissional_id, $servico_id, $data, $horario, $observacoes, $status) {
-        if ($this->verificarConflito($profissional_id, $data, $horario, $id)) {
+        if ($this->verificarConflito($profissional_id, $data, $horario)) {
             return false;
         }
 
@@ -85,9 +62,11 @@ class Agendamento {
         ]);
     }
 
+    // Deletar agendamento
     public function deletar($id) {
         $query = "DELETE FROM " . $this->table_name . " WHERE id = ?";
         $stmt = $this->conn->prepare($query);
         return $stmt->execute([$id]);
     }
 }
+?>
